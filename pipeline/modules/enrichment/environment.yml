@@ -1,0 +1,14 @@
+name: enrichment_env
+channels:
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - r-base=4.3
+  - bioconductor-clusterprofiler
+  - bioconductor-fgsea
+  - bioconductor-org.hs.eg.db
+  - r-ggplot2
+  - r-dplyr
+  - r-tidyr
+  - r-msigdbr

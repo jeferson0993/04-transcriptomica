@@ -1,0 +1,166 @@
+---
+title: "Transcriptomics Pipeline — Complete Report"
+params:
+  run_id: "run_001"
+  design_formula: "~condition"
+  norm_counts_path: ""
+  deg_results_path: ""
+  pca_plot_path: ""
+  volcano_plot_path: ""
+  ma_plot_path: ""
+  heatmap_path: ""
+  correlation_path: ""
+  go_path: ""
+  kegg_path: ""
+  gsea_path: ""
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: darkly
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(DT)
+library(ggplot2)
+library(dplyr)
+```
+
+## Executive Summary
+
+```{r summary}
+if (file.exists(params$deg_results_path)) {
+  deg <- read.csv(params$deg_results_path)
+  n_sig <- sum(deg$padj < 0.05 & abs(deg$log2FoldChange) > 1, na.rm = TRUE)
+  n_up <- sum(deg$padj < 0.05 & deg$log2FoldChange > 1, na.rm = TRUE)
+  n_down <- sum(deg$padj < 0.05 & deg$log2FoldChange < -1, na.rm = TRUE)
+  cat(sprintf("**Run:** %s  \n", params$run_id))
+  cat(sprintf("**Design:** `%s`  \n", params$design_formula))
+  cat(sprintf("**Total DEG (padj < 0.05, |log2FC| > 1):** %d  \n", n_sig))
+  cat(sprintf("  - Upregulated: %d  \n", n_up))
+  cat(sprintf("  - Downregulated: %d  \n", n_down))
+}
+```
+
+## Differential Expression Results
+
+```{r deg_table}
+if (file.exists(params$deg_results_path)) {
+  deg <- read.csv(params$deg_results_path)
+  datatable(deg, options = list(pageLength = 15, scrollX = TRUE))
+}
+```
+
+## Quality Control
+
+### Sample Correlation
+
+```{r correlation}
+if (file.exists(params$correlation_path)) {
+  knitr::include_graphics(params$correlation_path)
+}
+```
+
+### Gene Coverage
+
+```{r coverage}
+if (file.exists("gene_coverage.png")) {
+  knitr::include_graphics("gene_coverage.png")
+}
+if (file.exists("pca_variance.png")) {
+  knitr::include_graphics("pca_variance.png")
+}
+if (file.exists("batch_pca.png")) {
+  knitr::include_graphics("batch_pca.png")
+}
+```
+
+## PCA Plot
+
+```{r pca}
+if (file.exists(params$pca_plot_path)) {
+  knitr::include_graphics(params$pca_plot_path)
+}
+```
+
+## Volcano Plot
+
+```{r volcano}
+if (file.exists(params$volcano_plot_path)) {
+  knitr::include_graphics(params$volcano_plot_path)
+}
+```
+
+## MA Plot
+
+```{r ma}
+if (file.exists(params$ma_plot_path)) {
+  knitr::include_graphics(params$ma_plot_path)
+}
+```
+
+## Heatmap (Top DE Genes)
+
+```{r heatmap}
+if (file.exists(params$heatmap_path)) {
+  knitr::include_graphics(params$heatmap_path)
+}
+```
+
+## Functional Enrichment
+
+### GO Enrichment
+
+```{r go_plot}
+if (file.exists(params$go_path)) {
+  knitr::include_graphics(params$go_path)
+}
+```
+
+```{r go_table}
+go_file <- sub("go_dotplot.png", "go_enrichment.tsv", params$go_path)
+if (file.exists(go_file)) {
+  go <- read.delim(go_file)
+  datatable(go, options = list(pageLength = 10, scrollX = TRUE))
+}
+```
+
+### KEGG Pathways
+
+```{r kegg_plot}
+if (file.exists(params$kegg_path)) {
+  knitr::include_graphics(params$kegg_path)
+}
+```
+
+```{r kegg_table}
+kegg_file <- sub("kegg_dotplot.png", "kegg_enrichment.tsv", params$kegg_path)
+if (file.exists(kegg_file)) {
+  kegg <- read.delim(kegg_file)
+  datatable(kegg, options = list(pageLength = 10, scrollX = TRUE))
+}
+```
+
+### GSEA (Hallmark)
+
+```{r gsea_plot}
+if (file.exists(params$gsea_path)) {
+  knitr::include_graphics(params$gsea_path)
+}
+```
+
+```{r gsea_table}
+if (file.exists("gsea_results.tsv")) {
+  gsea <- read.delim("gsea_results.tsv")
+  datatable(gsea, options = list(pageLength = 10, scrollX = TRUE))
+}
+```
+
+## Session Info
+
+```{r session}
+sessionInfo()
+```

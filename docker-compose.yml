@@ -1,0 +1,101 @@
+name: bioinfo-04-transcriptomica
+
+services:
+  api:
+    container_name: transcriptomics-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${TRANSCRIPTOMICS_DB:-transcriptomics}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      DOMAIN: ${DOMAIN}
+      PYTHONPATH: /app
+    volumes:
+      - ./app:/app/app
+      - ./pipeline:/pipeline:ro
+      - ./scripts:/scripts:ro
+    networks:
+      - platform-net
+    restart: unless-stopped
+    depends_on:
+      - worker
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    volumes:
+      - ref_data:/ref
+      - workspace:/workspace
+      - ./pipeline:/pipeline:ro
+      - ./scripts:/scripts:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - platform-net
+    restart: unless-stopped
+    environment:
+      NXF_OPTS: -Xms256m -Xmx2g
+      JAVA_OPTS: -Xms256m -Xmx2g
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4'
+        reservations:
+          memory: 2G
+          cpus: '2'
+
+  ref-dl:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    command: bash /scripts/download-ref-grch38.sh
+    volumes:
+      - ref_data:/ref
+      - ./scripts:/scripts:ro
+    networks:
+      - platform-net
+    profiles:
+      - setup
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2'
+
+  frontend:
+    container_name: transcriptomics-frontend
+    build:
+      context: ./frontend
+      args:
+        BASE_PATH: /transcriptomics/
+        VITE_API_URL: /api/transcriptomics
+    networks:
+      - platform-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+
+volumes:
+  ref_data:
+  workspace:
+
+networks:
+  platform-net:
+    external: true
+    name: bioinfo-platform-net

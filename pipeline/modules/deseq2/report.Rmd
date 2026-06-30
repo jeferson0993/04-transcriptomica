@@ -1,0 +1,75 @@
+---
+title: "DESeq2 Analysis Report"
+params:
+  run_id: "run_001"
+  count_matrix_path: ""
+  design_formula: "~condition"
+  norm_counts_path: ""
+  deg_results_path: ""
+  pca_plot_path: ""
+  volcano_plot_path: ""
+  ma_plot_path: ""
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(knitr)
+```
+
+## Run Summary
+
+| Parameter | Value |
+|-----------|-------|
+| Run ID | `r params$run_id` |
+| Design Formula | `r params$design_formula` |
+| Count Matrix | `r basename(params$count_matrix_path)` |
+
+## Normalized Counts
+
+```{r}
+norm <- read.csv(params$norm_counts_path, row.names = 1)
+kable(head(norm[, 1:min(6, ncol(norm))]), digits = 2, caption = "Normalized counts (first 6 samples)")
+```
+
+## Differential Expression Results
+
+```{r}
+deg <- read.csv(params$deg_results_path)
+kable(head(deg, 20), digits = 4, caption = "Top differentially expressed genes")
+```
+
+## PCA Plot
+
+```{r}
+if (file.exists(params$pca_plot_path)) {
+  knitr::include_graphics(params$pca_plot_path)
+}
+```
+
+## Volcano Plot
+
+```{r}
+if (file.exists(params$volcano_plot_path)) {
+  knitr::include_graphics(params$volcano_plot_path)
+}
+```
+
+## MA Plot
+
+```{r}
+if (file.exists(params$ma_plot_path)) {
+  knitr::include_graphics(params$ma_plot_path)
+}
+```
+
+## Session Info
+
+```{r}
+sessionInfo()
+```

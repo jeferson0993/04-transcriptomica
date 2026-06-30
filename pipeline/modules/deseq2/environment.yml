@@ -1,0 +1,16 @@
+name: deseq2_env
+channels:
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - r-base=4.3
+  - r-deseq2
+  - r-ggplot2
+  - r-pheatmap
+  - r-rmarkdown
+  - r-knitr
+  - bioconductor-apeglm
+  - r-gplots
+  - r-viridis
+  - r-cowplot
